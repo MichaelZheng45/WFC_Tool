@@ -1,0 +1,16 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-WaveFunctionCollapse.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Intermediate\Build\Win64\WaveFunctionCollapseEditor\Development\Engine\SharedPCH.Engine.h.obj"
+"C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Intermediate\Build\Win64\UE4Editor\Development\WaveFunctionCollapse\WaveFunctionCollapse.cpp.obj"
+"C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Intermediate\Build\Win64\UE4Editor\Development\WaveFunctionCollapse\WaveFunctionCollapseGameModeBase.cpp.obj"
+"C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Intermediate\Build\Win64\UE4Editor\Development\WaveFunctionCollapse\WaveFunctionCollapse.init.gen.cpp.obj"
+"C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Intermediate\Build\Win64\UE4Editor\Development\WaveFunctionCollapse\WaveFunctionCollapseGameModeBase.gen.cpp.obj"
+"C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Intermediate\Build\Win64\UE4Editor\Development\WaveFunctionCollapse\Default.rc2.res"
+/OUT:"C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Intermediate\Build\Win64\UE4Editor\Development\WaveFunctionCollapse\UE4Editor-WaveFunctionCollapse.lib"
+/INCLUDE:IMPLEMENT_MODULE_WaveFunctionCollapse
