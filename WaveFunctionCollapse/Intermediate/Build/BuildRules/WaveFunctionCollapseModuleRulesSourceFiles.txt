@@ -1,3 +1,0 @@
-C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Source\WaveFunctionCollapse\WaveFunctionCollapse.Build.cs
-C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Source\WaveFunctionCollapse.Target.cs
-C:\Users\michael.zheng\Desktop\Console\WFC_Tool\WaveFunctionCollapse\Source\WaveFunctionCollapseEditor.Target.cs
