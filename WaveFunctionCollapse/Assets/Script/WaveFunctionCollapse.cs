@@ -1,25 +1,25 @@
 ﻿using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 //base class for wave function collapse
-public class WaveFunctionCollapse
+public abstract class WaveFunctionCollapse
 {
-    bool[][] wave;
-    int[][][] propagator;
+    protected bool[][] wave;
+    protected int[][][] propagator;
     int[][][] compatible;
-    int[] observed;
+    protected int[] observed;
 
     (int, int)[] stack;
     int stackSize;
 
     //random generator
 
-    int FMX, FMY, T;
-    bool periodic;
+    protected int FMX, FMY, T;
+    protected bool periodic;
 
-    double[] weights;
+    protected double[] weights;
     double[] weightLogWeights;
 
     int[] sumsOfOnes;
@@ -28,7 +28,7 @@ public class WaveFunctionCollapse
 
     //stuff done
 
-    public WaveFunctionCollapse(int width, int height)
+    protected WaveFunctionCollapse(int width, int height)
     {
         FMX = width;
         FMY = height;
@@ -36,7 +36,6 @@ public class WaveFunctionCollapse
 
     void Init()
     {
-        random = new Random();
         wave = new bool[FMX * FMY][];
         compatible = new int[wave.Length][][];
         for(int i = 0; i < wave.Length; i++)
@@ -86,7 +85,7 @@ public class WaveFunctionCollapse
             double entropy = entropies[i];
             if(amount > 1 && entropy <= min)
             {
-                double noise = 1E-6 * Random.value;
+                double noise = 1E-6 * UnityEngine.Random.value;
                 if(entropy + noise < min)
                 {
                     min = entropy + noise;
@@ -118,7 +117,7 @@ public class WaveFunctionCollapse
         {
             distribution[t] = wave[argmin][t] ? weights[t] : 0;
         }
-        int r = distribution.Random(Random.value);
+        int r = distribution.Random(UnityEngine.Random.value);
 
         bool[] w = wave[argmin];
         for(int t = 0; t < T; t++)
@@ -132,7 +131,7 @@ public class WaveFunctionCollapse
         return null;
     }
 
-    void Propagate()
+    protected void Propagate()
     {
         while(stackSize > 0)
         {
@@ -196,7 +195,7 @@ public class WaveFunctionCollapse
         }
 
         Clear();
-        Random.seed = seed;
+        UnityEngine.Random.seed = seed;
 
         for(int l = 0; l < limit || limit == 0; l++)
         {
@@ -211,7 +210,7 @@ public class WaveFunctionCollapse
         return true;
     }
 
-    void Ban(int i, int t)
+    protected void Ban(int i, int t)
     {
         wave[i][t] = false;
 
@@ -231,17 +230,14 @@ public class WaveFunctionCollapse
         entropies[i] = Mathf.Log((float)sum) - sumsOfWeightLogWeights[i] / sum;
     }
 
-    void Clear()
+    protected virtual void Clear()
     {
-        for(int i = 0; i < wave.Length; i++)
+        for (int i = 0; i < wave.Length; i++)
         {
-            for(int t = 0; t < T; t++)
+            for (int t = 0; t < T; t++)
             {
                 wave[i][t] = true;
-                for(int d = 0; d < 4; d++)
-                {
-                    compatible[i][t][d] = propagator[opposite[d]][t].Length;
-                }
+                for (int d = 0; d < 4; d++) compatible[i][t][d] = propagator[opposite[d]][t].Length;
             }
 
             sumsOfOnes[i] = weights.Length;
@@ -251,11 +247,154 @@ public class WaveFunctionCollapse
         }
     }
 
-    bool OnBoundary(int x, int y) => !periodic && (x < 0 || y < 0 || x >= FMX || y >= FMY);
+    protected abstract bool OnBoundary(int x, int y);
 
     protected static int[] DX = { -1, 0, 1, 0 };
     protected static int[] DY = { 0, 1, 0, -1 };
     static int[] opposite = { 2, 3, 0, 1 };
 }
 
+public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
+{
+    int N;
+    
+    byte[][] patterns;
 
+    byte[,] sample;
+    List<GameObject> tiles;
+    int ground;
+
+    public TwoDimWaveFunctionCollapse(byte[,] nSample, List<GameObject> nTiles, int N, int width, int height, bool periodicInput, bool periodicOutput, int symmetry, int nGround) : base(width, height)
+    {
+        this.N = N;
+        periodic = periodicOutput;
+
+        //
+        sample = nSample;
+        tiles = nTiles;
+        int SMX = sample.GetLength(0);
+        int SMY = sample.GetLength(1);
+        int count = tiles.Count;
+        long W = count.ToPower(N * N);
+
+        byte[] pattern(Func<int, int, byte> f)
+        {
+            byte[] result = new byte[N * N];
+            for(int y = 0; y < N; y++)
+            {
+                for(int x = 0; x < N; x++)
+                {
+                    result[x + y * N] = f(x, y);
+                }
+            }
+            return result;
+        };
+
+        byte[] patternFromSample(int x, int y) => pattern((dx, dy) => sample[(x + dx) % SMX, (y + dy) % SMY]);
+        byte[] rotate(byte[] p) => pattern((x, y) => p[N - 1 - y + x * N]);
+        byte[] reflect(byte[] p) => pattern((x, y) => p[N - 1 - x + y * N]);
+
+        long index(byte[] p)
+        {
+            long result = 0, power = 1;
+            for(int i = 0; i < p.Length; i++)
+            {
+                result += p[p.Length - 1 - i] * power;
+                power *= count;
+            }
+            return result;
+        }
+
+        byte[] patternFromIndex(long ind)
+        {
+            long residue = ind, power = W;
+            byte[] result = new byte[N * N];
+
+            for(int i = 0; i < result.Length; i++)
+            {
+                power /= count;
+                int C = 0;
+                
+                while(residue >= power)
+                {
+                    residue -= power;
+                    C++;
+                }
+
+                result[i] = (byte)C;
+            }
+
+            return result;
+        }
+
+        Dictionary<long, int> dicWeights = new Dictionary<long, int>();
+        List<long> ordering = new List<long>();
+
+        for(int y = 0; y < (periodicInput ? SMY: SMY - N + 1); y++)
+        {
+            for(int x = 0; x < (periodicInput ? SMX : SMX - N + 1); x++)
+            {
+                byte[][] ps = new byte[8][];
+
+                ps[0] = patternFromSample(x, y);
+                ps[1] = reflect(ps[0]);
+                ps[2] = rotate(ps[0]);
+                ps[3] = reflect(ps[2]);
+                ps[4] = rotate(ps[2]);
+                ps[5] = reflect(ps[4]);
+                ps[6] = rotate(ps[4]);
+                ps[7] = reflect(ps[6]);
+
+                for(int k = 0; k < symmetry; k++)
+                {
+                    long ind = index(ps[k]);
+                    if (dicWeights.ContainsKey(ind))
+                    {
+                        dicWeights[ind]++;
+                    }
+                    else
+                    {
+                        dicWeights.Add(ind, 1);
+                        ordering.Add(ind);
+                    }
+                }
+            }
+        }
+
+        T = dicWeights.Count;
+        this.ground = (nGround + T) % T;
+        patterns = new byte[T][];
+
+        base.weights = new double[T];
+
+        int counter = 0;
+        foreach(long w in ordering)
+        {
+            patterns[counter] = patternFromIndex(w);
+            base.weights[counter] = weights[w];
+            counter++;
+        }
+
+        //bool agrees
+    }
+
+
+
+    protected override bool OnBoundary(int x, int y) => !periodic && (x + N > FMX || y + N > FMY || x < 0 || y < 0);
+
+    protected override void Clear()
+    {
+        base.Clear();
+
+        if (ground != 0)
+        {
+            for (int x = 0; x < FMX; x++)
+            {
+                for (int t = 0; t < T; t++) if (t != ground) Ban(x + (FMY - 1) * FMX, t);
+                for (int y = 0; y < FMY - 1; y++) Ban(x + y * FMX, ground);
+            }
+
+            Propagate();
+        }
+    }
+}

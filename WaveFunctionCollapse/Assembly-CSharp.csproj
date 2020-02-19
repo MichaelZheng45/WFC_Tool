@@ -55,8 +55,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Script\2DWFC.cs" />
      <Compile Include="Assets\Script\EditorScripts\TileEditor.cs" />
      <Compile Include="Assets\Script\RandomFunctions.cs" />
+     <Compile Include="Assets\Script\WaveFunctionCollapse.cs" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>C:/Users/michael.zheng/Desktop/Console/WFC_Tool/WaveFunctionCollapse/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
  </Reference>
