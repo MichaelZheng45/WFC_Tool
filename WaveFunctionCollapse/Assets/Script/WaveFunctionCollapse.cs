@@ -261,10 +261,11 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
     byte[][] patterns;
 
     byte[,] sample;
+    List<UnityEngine.Color> colorList;
     List<GameObject> tiles;
     int ground;
 
-    public TwoDimWaveFunctionCollapse(byte[,] nSample, List<GameObject> nTiles, int N, int width, int height, bool periodicInput, bool periodicOutput, int symmetry, int nGround) : base(width, height)
+    public TwoDimWaveFunctionCollapse(byte[,] nSample, List<GameObject> nTiles, List<UnityEngine.Color> colorL, int N, int width, int height, bool periodicInput, bool periodicOutput, int symmetry, int nGround) : base(width, height)
     {
         this.N = N;
         periodic = periodicOutput;
@@ -274,7 +275,11 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
         tiles = nTiles;
         int SMX = sample.GetLength(0);
         int SMY = sample.GetLength(1);
-        int count = tiles.Count;
+
+        //int count = tiles.Count;
+        colorList = colorL;
+        int count = colorList.Count;
+        
         long W = count.ToPower(N * N);
 
         byte[] pattern(Func<int, int, byte> f)
@@ -376,9 +381,96 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
         }
 
         //bool agrees
+        bool agrees(byte[] p1, byte[] p2, int dx, int dy)
+        {
+            int xMin = dx < 0 ? 0 : dx, xMax = dx < 0 ? dx + N : N, yMin = dy < 0 ? 0 : dy, yMax = dy < 0 ? dy + N : N;
+            for(int y = yMin; y < yMax; y++)
+            {
+                for(int x = xMin; x < xMax; x++)
+                {
+                    if(p1[x+N*y] != p2[x-dx + N * (y-dy)])
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        propagator = new int[4][][];
+        for(int d = 0; d < 4; d++)
+        {
+            for(int t = 0; t < T; t++)
+            {
+                List<int> list = new List<int>();
+                for(int t2 = 0; t2 < T; t2++)
+                {
+                    if(agrees(patterns[t], patterns[t2], DX[d], DY[d]))
+                    {
+                        list.Add(t2);
+                    }
+ 
+                }
+
+                propagator[d][t] = new int[list.Count];
+
+                for (int c = 0; c < list.Count; c++)
+                {
+                    propagator[d][t][c] = list[c];
+                }
+            }
+        }
+        
     }
 
+    public void draw(Texture2D texture)
+    {
+        texture = new Texture2D(FMX, FMY);
+        if (observed != null)
+        {
+            for (int y = 0; y < FMY; y++)
+            {
+                int dy = y < FMY - N + 1 ? 0 : N - 1;
+                for (int x = 0; x < FMX; x++)
+                {
+                    int dx = x < FMX - N + 1 ? 0 : N - 1;
+                    Color c = colorList[patterns[observed[x - dx + (y - dy) * FMX]][dx + dy * N]];
+                    texture.SetPixel(x, y, c);
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < wave.Length; i++)
+            {
+                int contributors = 0, r = 0, g = 0, b = 0;
+                int x = i % FMX, y = i / FMX;
 
+                for (int dy = 0; dy < N; dy++) for (int dx = 0; dx < N; dx++)
+                    {
+                        int sx = x - dx;
+                        if (sx < 0) sx += FMX;
+
+                        int sy = y - dy;
+                        if (sy < 0) sy += FMY;
+
+                        int s = sx + sy * FMX;
+                        if (OnBoundary(sx, sy)) continue;
+                        for (int t = 0; t < T; t++) if (wave[s][t])
+                            {
+                                contributors++;
+                                Color color = colorList[patterns[t][dx + dy * N]];
+                                r += (int)(color.r * 255);
+                                g += (int)(color.g * 255);
+                                b += (int)(color.b * 255);
+                            }
+                    }
+
+                texture.SetPixel(i % FMX, i / FMX, new Color(r, g, b));
+            }
+        }
+    }
 
     protected override bool OnBoundary(int x, int y) => !periodic && (x + N > FMX || y + N > FMY || x < 0 || y < 0);
 
