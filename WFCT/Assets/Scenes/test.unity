@@ -233,17 +233,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1433295923}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb577dc21a8dc4f4da554cabb4c41733, type: 3}
+  m_Script: {fileID: 11500000, guid: 65a6b19400cfd13458e6f20aeedaf2eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objList: []
-  colorList: []
-  mapData: {fileID: 0}
-  sampleTex: {fileID: 2800000, guid: b026b03d79051af45bb687f945f62ccf, type: 3}
-  outputTex: {fileID: 2800000, guid: a1cca7dbef9aa6a418c68a0c52e1209f, type: 3}
-  outputX: 48
-  outputY: 48
-  seed: 154
+  loadObj: {fileID: 0}
+  sample: {fileID: 11400000, guid: 0d32a40270478a44cbc008233cc0c829, type: 2}
+  startPos: {x: 0, y: 0, z: 0}
 --- !u!64 &1433295925
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -313,7 +308,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1433295923}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.37, z: 0}
+  m_LocalPosition: {x: 6.82, y: 1.37, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

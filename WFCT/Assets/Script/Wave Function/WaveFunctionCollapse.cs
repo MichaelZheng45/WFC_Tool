@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+using UnityEditor;
 
 //base class for wave function collapse
 public abstract class WaveFunctionCollapse
@@ -261,11 +263,10 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
     byte[][] patterns;
 
     byte[,] sample;
-    List<UnityEngine.Color> colorList;
-    List<GameObject> tiles;
+    List<string> tiles;
     int ground;
 
-    public TwoDimWaveFunctionCollapse(byte[,] nSample, List<GameObject> nTiles, List<UnityEngine.Color> colorL, int N, int width, int height, bool periodicInput, bool periodicOutput, int symmetry, int nGround) : base(width, height)
+    public TwoDimWaveFunctionCollapse(byte[,] nSample, List<string> nTiles, int N, int width, int height, bool periodicInput, bool periodicOutput, int symmetry, int nGround) : base(width, height)
     {
         this.N = N;
         periodic = periodicOutput;
@@ -277,8 +278,7 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
         int SMY = sample.GetLength(1);
 
         //int count = tiles.Count;
-        colorList = colorL;
-        int Ccount = colorList.Count;
+        int Ccount = tiles.Count;
         
         long W = Ccount.ToPower(N * N);
 
@@ -401,9 +401,9 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
 
     }
 
-    public Texture2D draw(Texture2D texture)
+    public int[,] draw()
     {
-        texture = new Texture2D(FMX, FMY);
+        int[,] finalData = new int[FMX, FMY];
         if (observed != null)
         {
             for (int y = 0; y < FMY; y++)
@@ -412,8 +412,9 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
                 for (int x = 0; x < FMX; x++)
                 {
                     int dx = x < FMX - N + 1 ? 0 : N - 1;
-                    Color c = colorList[patterns[observed[x - dx + (y - dy) * FMX]][dx + dy * N]];
-                    texture.SetPixel(x, y, c);
+                    int finalID = patterns[observed[x - dx + (y - dy) * FMX]][dx + dy * N];
+                    finalData[x, y] = finalID;
+                    //texture.SetPixel(x, y, c);
                 }
             }
         }
@@ -421,7 +422,8 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
         {
             for (int i = 0; i < wave.Length; i++)
             {
-                int contributors = 0, r = 0, g = 0, b = 0;
+                int contributors = 0;
+                int finalID = 0;
                 int x = i % FMX, y = i / FMX;
 
                 for (int dy = 0; dy < N; dy++) for (int dx = 0; dx < N; dx++)
@@ -437,19 +439,17 @@ public class TwoDimWaveFunctionCollapse : WaveFunctionCollapse
                         for (int t = 0; t < T; t++) if (wave[s][t])
                             {
                                 contributors++;
-                                Color color = colorList[patterns[t][dx + dy * N]];
-                                r += (int)(color.r * 255);
-                                g += (int)(color.g * 255);
-                                b += (int)(color.b * 255);
+                                finalID = patterns[t][dx + dy * N];
                             }
                     }
-
-                texture.SetPixel(i % FMX, i / FMX, new Color(r, g, b));
+                finalData[x, y] = finalID;
+                //texture.SetPixel(x,y, new Color(r, g, b));
             }
         }
-        texture.Apply();
-        return texture;
+
+        return finalData;
     }
+
 
     protected override bool OnBoundary(int x, int y) => !periodic && (x + N > FMX || y + N > FMY || x < 0 || y < 0);
 

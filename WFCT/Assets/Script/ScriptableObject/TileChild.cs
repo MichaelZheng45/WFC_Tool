@@ -5,10 +5,10 @@ using UnityEngine;
 [System.Serializable]
 public class TileChild
 {
-	Vector3 position;
-	Quaternion rotation;
-	Vector3 scale;
+	public Vector3 position;
+	public Quaternion rotation;
+	public Vector3 scale;
 
 	//note: it should be under folder "TilePiece/" ex TilePiece/TreeTile
-	string objectName = "";
+	public string objectName = "";
 }

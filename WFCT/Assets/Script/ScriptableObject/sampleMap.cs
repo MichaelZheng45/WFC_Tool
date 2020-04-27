@@ -4,8 +4,15 @@ using UnityEngine;
 
 
 [CreateAssetMenu(fileName = "Sample", menuName = "ScriptableObjects/SampleMap", order = 1)]
+[System.Serializable]
 public class sampleMap : ScriptableObject
 {
-    List<TileChild> tileList;
-    int[,] sampleTilesMap;
+    public List<string> tileListPath;
+    public sampleRow[] sampleTilesMap;
+}
+
+[System.Serializable]
+public class sampleRow
+{
+    public int[] sampleTileData;
 }
